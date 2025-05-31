@@ -251,6 +251,13 @@ export const paymentMethodTableColumns = [
         accessor: 'name',
     },
     {
+        Header: 'Category',
+        accessor: 'category',
+        Cell: (e) => {
+            return e.row.original?.category || '---'
+        },
+    },
+    {
         Header: 'Logo',
         accessor: 'logo_full_url',
         Cell: (e) => {

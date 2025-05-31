@@ -1,17 +1,19 @@
-import React, { useState } from 'react'
-import ReactTable from '../ReactTables/ReactTable';
-import { productTableColumns } from '../../utils/reactTableColumns';
-import { getErrors, hasData, toastDefault } from '../../utils/handler.utils';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import useGet from '../../hooks/useGet';
-import UiHandler from '../UiHandler';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../common/axios';
+import useGet from '../../hooks/useGet';
+import { getErrors, hasData, toastDefault } from '../../utils/handler.utils';
+import { productTableColumns } from '../../utils/reactTableColumns';
+import ReactTable from '../ReactTables/ReactTable';
+import UiHandler from '../UiHandler';
 
 function TopupProduct() {
     const [uniqueState, setUniqueState] = useState(false)
 
     const [productData, loading, error] = useGet(`admin/topup-products`, '', uniqueState)
+
+    console.log(productData)
 
     const deleteProductHangdler = (id) => {
         if (window.confirm('Are you sure')) {
