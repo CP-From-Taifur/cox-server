@@ -49,6 +49,7 @@ function EditPackage(props) {
   const voucher_ids = useRef(null);
   const type = useRef(null);
   const bot_url = useRef(null);
+  const code = useRef(null);
 
   const handleRemoveImage = () => {
    
@@ -103,7 +104,8 @@ const handleImageChange = (e) => {
       is_auto: is_auto.current.checked ? 1 : 0,
       voucher_id: voucher_ids.current.value,
       in_stock: in_stock.current.checked ? 1 : 0,
-      botUrl: bot_url.current.value
+      botUrl: bot_url.current.value,
+      code: code.current.value
     };
     axiosInstance
       .post(`/admin/topup-package/update/${packageId}`, formData)
@@ -280,6 +282,18 @@ const handleImageChange = (e) => {
                     </div>
                   </div>
 
+                  <div className="form_grid">
+                     <div>
+                      <label htmlFor="sort_order">Code</label>
+                      <input
+                        ref={code}
+                        id="code"
+                        defaultValue={data?.code}
+                        className="form_input"
+                        type="text"
+                        placeholder="Code"
+                      />
+                    </div>
                      <div>
                       <label htmlFor="sort_order">Bot URL</label>
                       <input
@@ -291,6 +305,7 @@ const handleImageChange = (e) => {
                         placeholder="Bot URL"
                       />
                     </div>
+                  </div>
 
                   <div className="my-2">
                     <div class="relative">

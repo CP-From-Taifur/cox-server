@@ -37,6 +37,7 @@ function AddPackage(props) {
   const voucher_id = useRef(null);
   const type = useRef(null);
   const bot_url = useRef(null);
+  const code = useRef(null);
 
   const handleRemoveImage = () => {
     setPackageIcon(null);
@@ -62,7 +63,8 @@ function AddPackage(props) {
         is_auto: is_auto.current.checked ? 1 : 0,
         voucher_id: voucher_id.current.value,
         in_stock: in_stock.current.checked ? 1 : 0,
-        botUrl: bot_url.current.value
+        botUrl: bot_url.current.value,
+        code: code.current.value
       })
       .then((res) => {
         toast.success("Topup package created successfully", toastDefault);
@@ -214,7 +216,17 @@ function AddPackage(props) {
                       />
                     </div>
                   </div>
-
+                      <div className="form_grid">  
+                   <div>
+                      <label htmlFor="buy_price">Code</label>
+                      <input
+                        ref={code}
+                        id="code"
+                        className="form_input"
+                        type="text"
+                        placeholder="Code"
+                      />
+                    </div>
                    <div>
                       <label htmlFor="buy_price">Bot URL</label>
                       <input
@@ -224,6 +236,7 @@ function AddPackage(props) {
                         type="text"
                         placeholder="Bot URL"
                       />
+                    </div>
                     </div>
 
                   <div className="my-2">
