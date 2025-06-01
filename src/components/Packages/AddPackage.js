@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useHistory, withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
 import axiosInstance from "../../common/axios";
@@ -36,6 +36,7 @@ function AddPackage(props) {
   const sortOrder = useRef(null);
   const voucher_id = useRef(null);
   const type = useRef(null);
+  const bot_url = useRef(null);
 
   const handleRemoveImage = () => {
     setPackageIcon(null);
@@ -61,6 +62,7 @@ function AddPackage(props) {
         is_auto: is_auto.current.checked ? 1 : 0,
         voucher_id: voucher_id.current.value,
         in_stock: in_stock.current.checked ? 1 : 0,
+        botUrl: bot_url.current.value
       })
       .then((res) => {
         toast.success("Topup package created successfully", toastDefault);
@@ -212,6 +214,17 @@ function AddPackage(props) {
                       />
                     </div>
                   </div>
+
+                   <div>
+                      <label htmlFor="buy_price">Bot URL</label>
+                      <input
+                        ref={bot_url}
+                        id="bot_url"
+                        className="form_input"
+                        type="text"
+                        placeholder="Bot URL"
+                      />
+                    </div>
 
                   <div className="my-2">
                     <div class="relative">

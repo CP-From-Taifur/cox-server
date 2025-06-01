@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useHistory, withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
 import axiosInstance from "../../common/axios";
@@ -24,6 +24,7 @@ function EditPackage(props) {
     uniqueState
   );
 
+
   const [products, loadingProducts] = useGet(
     `admin/topup-products`,
     "",
@@ -47,6 +48,7 @@ function EditPackage(props) {
   const sortOrder = useRef(null);
   const voucher_ids = useRef(null);
   const type = useRef(null);
+  const bot_url = useRef(null);
 
   const handleRemoveImage = () => {
    
@@ -101,6 +103,7 @@ const handleImageChange = (e) => {
       is_auto: is_auto.current.checked ? 1 : 0,
       voucher_id: voucher_ids.current.value,
       in_stock: in_stock.current.checked ? 1 : 0,
+      botUrl: bot_url.current.value
     };
     axiosInstance
       .post(`/admin/topup-package/update/${packageId}`, formData)
@@ -272,10 +275,22 @@ const handleImageChange = (e) => {
                         defaultValue={data?.tag}
                         className="form_input"
                         type="text"
-                        placeholder="Name"
+                        placeholder="Tag"
                       />
                     </div>
                   </div>
+
+                     <div>
+                      <label htmlFor="sort_order">Bot URL</label>
+                      <input
+                        ref={bot_url}
+                        id="bot_url"
+                        defaultValue={data?.botUrl}
+                        className="form_input"
+                        type="text"
+                        placeholder="Bot URL"
+                      />
+                    </div>
 
                   <div className="my-2">
                     <div class="relative">
