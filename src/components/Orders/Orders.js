@@ -123,11 +123,10 @@ function Orders() {
   const shouldShowRetryButton = (status, securityCode, isAutoPackage, isVoucher) => {
 
     const isInProgress = status === "in_progress";
-    const hasValidSecurity = securityCode === "IDCODE";
     const isAutoPkg = isAutoPackage === "1";
     const isPendingNonVoucher = isVoucher === "0" && status === "pending";
 
-    return (isInProgress || isPendingNonVoucher) && hasValidSecurity && isAutoPkg;
+    return (isInProgress || isPendingNonVoucher) && isAutoPkg;
   };
 
   let actionMenu = {
