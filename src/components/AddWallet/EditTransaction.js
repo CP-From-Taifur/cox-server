@@ -10,7 +10,7 @@ function EditTransaction({ transactionId, onComplete }) {
 
     const [loading, setLoading] = useState(null)
     const [data, loadingData] = useGet(`admin/transaction/${transactionId}`)
-    console.log(data)
+
     const amount = useRef(null);
     const number = useRef(null);
     const status = useRef(null);

@@ -20,7 +20,6 @@ function EditBanner(props) {
     const link = useRef(null);
     const isactive = useRef(null);
 
-    console.log(data);
 
     const editPaymentMethodHandler = (e) => {
         e.preventDefault()

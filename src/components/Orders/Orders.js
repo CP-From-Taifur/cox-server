@@ -121,7 +121,7 @@ function Orders() {
   };
 
   const shouldShowRetryButton = (status, securityCode, isAutoPackage, isVoucher) => {
-    console.log(isVoucher, status, securityCode, isAutoPackage);
+
     const isInProgress = status === "in_progress";
     const hasValidSecurity = securityCode === "IDCODE";
     const isAutoPkg = isAutoPackage === "1";
