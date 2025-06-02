@@ -113,6 +113,7 @@ function Voucher(props) {
     };
 
     const [selectedRowss, setSelectedRowss] = useState([]);
+    const [selectAll, setSelectAll] = useState(false);
 
     const handleCheckboxChange = (id) => {
       setSelectedRowss((prevSelectedRows) => {
@@ -124,27 +125,37 @@ function Voucher(props) {
       });
     };
 
+    const handleSelectAll = () => {
+        if (selectAll) {
+            setSelectedRowss([]);
+        } else {
+            const allIds = voucherData?.vouchers?.map(voucher => voucher.id) || [];
+            setSelectedRowss(allIds);
+        }
+        setSelectAll(!selectAll);
+    };
+
     let checkbox = {
-        id: 'action',
-        Header: "Action",
+        id: 'checkbox',
+        Header: () => (
+            <input
+                type="checkbox"
+                checked={selectAll}
+                onChange={handleSelectAll}
+            />
+        ),
         accessor: 'id',
         Cell: (e) => {
-            return <ul className="flex space-x-2">
-                {/* <Link to={`/banner/edit/${e.value}`} className="cstm_btn_small">
-                    Edit
-                </Link> */}
-                <input
-                    type="checkbox"
-                    checked={selectedRowss.includes(e.value)}
-                    onChange={() => handleCheckboxChange(e.value)}
-                />
-
-            </ul>
+            return <input
+                type="checkbox"
+                checked={selectedRowss.includes(e.value)}
+                onChange={() => handleCheckboxChange(e.value)}
+            />
         }
     }
 
     let withEditButton = [...voucherTableColumns, editButton]
-    let withEditCheckbox = [...voucherTableColumns, checkbox]
+    let withEditCheckbox = [checkbox, ...voucherTableColumns, editButton]
 
 
     return (
