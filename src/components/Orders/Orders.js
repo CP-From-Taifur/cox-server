@@ -35,27 +35,74 @@ function Orders() {
   const handleRetryOrder = async (orderId) => {
     try {
       await toast.promise(
-        axiosInstance.post('/admin/retry-bot-request', {
-          order_id: orderId
+        axiosInstance.post("/admin/retry-bot-request", {
+          order_id: orderId,
         }),
         {
-          pending: 'Retrying order...',
+          pending: "Retrying order...",
           success: {
             render() {
               reloadRefFunc.current(); // Reload the table
-              return 'Order retry initiated successfully';
-            }
+              return "Order retry initiated successfully";
+            },
           },
           error: {
             render(err) {
               return getErrors(err.data, false, true);
-            }
-          }
+            },
+          },
         },
         toastDefault
       );
     } catch (error) {
-      console.error('Retry order error:', error);
+      console.error("Retry order error:", error);
+    }
+  };
+
+  const handleUnusedVoucherLoad = async (order_id, product_id, voucher) => {
+
+
+    try {
+      const data = await axiosInstance.post(
+        `admin/packages/add-upvoucher`,
+        {
+          product_id,
+          data: voucher,
+        }
+      );
+
+
+      if (!data?.data?.success) {
+        toast.error(
+          data?.data?.message || "Failed to load voucher",
+          toastDefault
+        );
+        return;
+      }
+
+      await toast.promise(
+        axiosInstance.post("/admin/packages/unused-voucher-load", {
+          order_id: order_id,
+         
+        }),
+        {
+          pending: "loaded voucher...",
+          success: {
+            render() {
+              reloadRefFunc.current(); // Reload the table
+              return "voucher loaded successfully";
+            },
+          },
+          error: {
+            render(err) {
+              return getErrors(err.data, false, true);
+            },
+          },
+        },
+        toastDefault
+      );
+    } catch (error) {
+      console.error("load voucher error:", error);
     }
   };
 
@@ -105,11 +152,9 @@ function Orders() {
     return column;
   });
 
-
-
   const handleCopy = (text, isVoucher = false) => {
     let textToCopy = text.toString();
-  
+
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
@@ -120,8 +165,12 @@ function Orders() {
       });
   };
 
-  const shouldShowRetryButton = (status, securityCode, isAutoPackage, isVoucher) => {
-
+  const shouldShowRetryButton = (
+    status,
+    securityCode,
+    isAutoPackage,
+    isVoucher
+  ) => {
     const isInProgress = status === "in_progress";
     const isAutoPkg = isAutoPackage === "1";
     const isPendingNonVoucher = isVoucher === "0" && status === "pending";
@@ -138,8 +187,9 @@ function Orders() {
       const securitycode = e.row.original.securitycode;
       const is_auto_package = e.row.original.is_auto_package;
       const isVoucher = e.row.original.isVoucher;
+      const voucher = e.row.original.Voucher?.data || null;
 
-      if (status !== "pending" && status !== "in_progress" ) return "---";
+      if (status !== "pending" && status !== "in_progress") return "---";
       return (
         <ul className="flex space-x-2">
           <li
@@ -148,7 +198,12 @@ function Orders() {
           >
             Edit
           </li>
-          { shouldShowRetryButton(status, securitycode, is_auto_package, isVoucher) &&  (
+          {shouldShowRetryButton(
+            status,
+            securitycode,
+            is_auto_package,
+            isVoucher
+          ) && (
             <li
               className="cstm_btn_small bg-yellow-500 hover:bg-yellow-600"
               onClick={() => handleRetryOrder(e.value)}
@@ -156,11 +211,33 @@ function Orders() {
               Retry
             </li>
           )}
+
+          {status === "in_progress" && is_auto_package === "1" && voucher && (
+            <li className="">
+              <button
+                className="cstm_btn_small bg-green-500 hover:bg-green-600"
+                onClick={() =>
+                  handleUnusedVoucherLoad(
+                    e.value,
+                    e.row.original.product_id,
+                    voucher
+                  )
+                }
+                disabled={
+                  e.row.original.is_voucher_loaded === "1"
+                }
+              >
+                {e.row.original.is_voucher_loaded === "1"
+                  ? <i class="fas fa-check"></i>
+                  : <i class="fas fa-rotate-right"></i>}
+              </button>
+            </li>
+          )}
         </ul>
       );
     },
   };
-  
+
   let withActionMenu = [...columnsWithCopy, actionMenu];
 
   const openChangeStatusModal = async (order_id) => {
