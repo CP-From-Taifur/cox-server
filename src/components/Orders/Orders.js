@@ -59,31 +59,19 @@ function Orders() {
     }
   };
 
-  const handleUnusedVoucherLoad = async (order_id, product_id, voucher) => {
-
+  const handleUnusedVoucherLoad = async (order_id, voucher) => {
+    
+    const voucherData = voucher?.data?.trim();
+    const package_id = voucher?.package_id;
 
     try {
-      const data = await axiosInstance.post(
-        `admin/packages/add-upvoucher`,
-        {
-          product_id,
-          data: voucher,
-        }
-      );
 
-
-      if (!data?.data?.success) {
-        toast.error(
-          data?.data?.message || "Failed to load voucher",
-          toastDefault
-        );
-        return;
-      }
 
       await toast.promise(
         axiosInstance.post("/admin/packages/unused-voucher-load", {
           order_id: order_id,
-         
+         package_id: package_id,
+         data: voucherData
         }),
         {
           pending: "loaded voucher...",
@@ -187,7 +175,8 @@ function Orders() {
       const securitycode = e.row.original.securitycode;
       const is_auto_package = e.row.original.is_auto_package;
       const isVoucher = e.row.original.isVoucher;
-      const voucher = e.row.original.Voucher?.data || null;
+      const voucher = e.row.original.Voucher || null;
+   
 
       if (status !== "pending" && status !== "in_progress") return "---";
       return (
@@ -215,21 +204,19 @@ function Orders() {
           {status === "in_progress" && is_auto_package === "1" && voucher && (
             <li className="">
               <button
+              disabled={e.row.original.is_voucher_loaded === "1"}
                 className="cstm_btn_small bg-green-500 hover:bg-green-600"
                 onClick={() =>
                   handleUnusedVoucherLoad(
                     e.value,
-                    e.row.original.product_id,
                     voucher
                   )
                 }
-                disabled={
-                  e.row.original.is_voucher_loaded === "1"
-                }
+              
               >
                 {e.row.original.is_voucher_loaded === "1"
                   ? <i class="fas fa-check"></i>
-                  : <i class="fas fa-rotate-right"></i>}
+                  : <i class="fas fa-undo"></i>}
               </button>
             </li>
           )}
