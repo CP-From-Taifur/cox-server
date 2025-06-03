@@ -171,58 +171,58 @@ function Orders() {
     Header: "Action",
     accessor: "id",
     Cell: (e) => {
-      const status = e.row.original.status;
-      const securitycode = e.row.original.securitycode;
-      const is_auto_package = e.row.original.is_auto_package;
-      const isVoucher = e.row.original.isVoucher;
-      const voucher = e.row.original.Voucher || null;
-   
+  const status = e.row.original.status;
+  const securitycode = e.row.original.securitycode;
+  const is_auto_package = e.row.original.is_auto_package;
+  const isVoucher = e.row.original.isVoucher;
+  const voucher = e.row.original.Voucher || null;
 
-      if (status !== "pending" && status !== "in_progress") return "---";
-      return (
-        <ul className="flex space-x-2">
+  if (status === "pending" || status === "in_progress") {
+    return (
+      <ul className="flex space-x-2">
+        <li
+          className="cstm_btn_small"
+          onClick={() => openChangeStatusModal(e.value)}
+        >
+          Edit
+        </li>
+        {shouldShowRetryButton(
+          status,
+          securitycode,
+          is_auto_package,
+          isVoucher
+        ) && (
           <li
-            className="cstm_btn_small"
-            onClick={() => openChangeStatusModal(e.value)}
+            className="cstm_btn_small bg-yellow-500 hover:bg-yellow-600"
+            onClick={() => handleRetryOrder(e.value)}
           >
-            Edit
+            Retry
           </li>
-          {shouldShowRetryButton(
-            status,
-            securitycode,
-            is_auto_package,
-            isVoucher
-          ) && (
-            <li
-              className="cstm_btn_small bg-yellow-500 hover:bg-yellow-600"
-              onClick={() => handleRetryOrder(e.value)}
-            >
-              Retry
-            </li>
-          )}
-
-          {is_auto_package === "1" && voucher && (
-            <li className="">
-              <button
-              disabled={e.row.original.is_voucher_loaded === "1"}
-                className="cstm_btn_small bg-green-500 hover:bg-green-600"
-                onClick={() =>
-                  handleUnusedVoucherLoad(
-                    e.value,
-                    voucher
-                  )
-                }
-              
-              >
-                {e.row.original.is_voucher_loaded === "1"
-                  ? <i class="fas fa-check"></i>
-                  : <i class="fas fa-undo"></i>}
-              </button>
-            </li>
-          )}
-        </ul>
-      );
-    },
+        )}
+      </ul>
+    );
+  } else if ((status === "in_progress" || status === "cancel") && is_auto_package === "1" && voucher) {
+    return (
+      <ul className="flex space-x-2">
+        <li className="">
+          <button
+            disabled={e.row.original.is_voucher_loaded === "1"}
+            className="cstm_btn_small bg-green-500 hover:bg-green-600"
+            onClick={() => handleUnusedVoucherLoad(e.value, voucher)}
+          >
+            {e.row.original.is_voucher_loaded === "1" ? (
+              <i className="fas fa-check"></i>
+            ) : (
+              <i className="fas fa-undo"></i>
+            )}
+          </button>
+        </li>
+      </ul>
+    );
+  } else {
+    return "---";
+  }
+}
   };
 
   let withActionMenu = [...columnsWithCopy, actionMenu];
