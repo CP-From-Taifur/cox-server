@@ -201,7 +201,7 @@ function Orders() {
             </li>
           )}
 
-          {status === "in_progress" && status === "cancel" && is_auto_package === "1" && voucher && (
+          {(status === "in_progress" || status === "cancel") && is_auto_package === "1" && voucher && (
             <li className="">
               <button
               disabled={e.row.original.is_voucher_loaded === "1"}
