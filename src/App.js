@@ -1,4 +1,3 @@
-import React from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import AddWallet from "./components/AddWallet/AddWallet";
@@ -16,6 +15,9 @@ import EditBanner from "./components/Banner/EditBanner";
 import AddCategory from "./components/category/AddCategory";
 import Category from "./components/category/Category";
 import EditCategory from "./components/category/EditCategory";
+import CreateMystery from "./components/Mystery/CreateMystery";
+import EditMystery from "./components/Mystery/EditMystery";
+import Mystery from "./components/Mystery/Mystery";
 import AddNotice from "./components/Notice/AddNotice";
 import EditNotice from "./components/Notice/EditNotice";
 import Notice from "./components/Notice/Notice";
@@ -130,6 +132,9 @@ function App() {
             <Route path="/topup-packages" exact component={Packages} />
             <Route path="/topup-package/edit/:id" exact component={EditPackage} />
             <Route path="/topup-package/add/:id" exact component={AddPackage} />
+            <Route path="/mystery" exact component={Mystery} />
+            <Route path="/mystery/add/" exact component={CreateMystery} />
+              <Route path="/mystery/edit/:id" exact component={EditMystery} />
 
             <Route path="/add-vouchers/:id" exact component={AddUpVouchers} />
             <Route path="/topup-package/voucher/:id" exact component={Voucher} />
