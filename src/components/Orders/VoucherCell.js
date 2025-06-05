@@ -1,7 +1,20 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
+import { toastDefault } from "../../utils/handler.utils";
 
 const VoucherCell = ({ voucherData, childVouchers, handleCopy }) => {
   const [showAll, setShowAll] = useState(false);
+  
+  const copyToClipboard = async (text) => {
+    try {
+      console.log(text)
+      await navigator.clipboard.writeText(text);
+      handleCopy && handleCopy(text, true); // Call handleCopy if provided
+      toast.success('Voucher copied to clipboard!', {toastDefault})
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   // If there are child vouchers, show them
   if (childVouchers && childVouchers.length > 0) {
@@ -11,7 +24,8 @@ const VoucherCell = ({ voucherData, childVouchers, handleCopy }) => {
         <div className="flex flex-col space-y-2">
           <span
             className="cursor-pointer hover:text-blue-600"
-            onClick={() => handleCopy(childVouchers[0].data, true)}
+            onClick={() => copyToClipboard(childVouchers[0].data)}
+            title="Click to copy"
           >
             {childVouchers[0].data}
           </span>
@@ -29,11 +43,12 @@ const VoucherCell = ({ voucherData, childVouchers, handleCopy }) => {
       // Show all vouchers
       return (
         <div className="flex flex-col space-y-2">
-          {childVouchers.map((voucher, index) => (
+          {childVouchers.map((voucher) => (
             <span
               key={voucher.id}
               className="cursor-pointer hover:text-blue-600"
-              onClick={() => handleCopy(voucher.data, true)}
+              onClick={() => copyToClipboard(voucher.data)}
+              title="Click to copy"
             >
               {voucher.data}
             </span>
@@ -54,7 +69,8 @@ const VoucherCell = ({ voucherData, childVouchers, handleCopy }) => {
     return (
       <span
         className="cursor-pointer hover:text-blue-600"
-        onClick={() => handleCopy(voucherData, true)}
+        onClick={() => copyToClipboard(voucherData)}
+        title="Click to copy"
       >
         {voucherData}
       </span>

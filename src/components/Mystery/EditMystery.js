@@ -23,70 +23,80 @@ function EditMystery() {
     name: "",
     package_ids: [],
   });
-const [packages, setPackages] = useState([]); // Add this state
+  const [rawPackageIds, setRawPackageIds] = useState([]); // Store the raw package IDs from API
 
   useEffect(() => {
     loadMysteryDetails();
-    loadAllPackages();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  useEffect(() => {
+    loadAllPackages();
+  }, []);
+
+  // Load packages after both mystery details and all packages are loaded
+  useEffect(() => {
+    if (rawPackageIds.length > 0 && allPackages.length > 0) {
+      loadSelectedPackages();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawPackageIds, allPackages]);
+
   const loadMysteryDetails = async () => {
-  try {
-    const response = await axiosInstance.get(`/admin/mystery/${id}`);
-    const mystery = response.data.data;
-    
-    setInitialValues({
-      name: mystery.name,
-      package_ids: [] // We'll set this after packages load
-    });
-    
-    formik.setValues({
-      name: mystery.name,
-      package_ids: [] // We'll set this after packages load
-    });
-
-    // Store package IDs for later use
-    setPackages(mystery.package_ids);
-    
-  } catch (error) {
-    toast.error("Failed to load mystery details", toastDefault);
-    history.push("/mystery");
-  }
-};
-
- const loadAllPackages = async () => {
-  try {
-    const response = await axiosInstance.get("/admin/voucher-packages");
-    const options = response.data?.data?.map((pkg) => ({
-      value: pkg.id,
-      label: `${pkg.name} (${pkg.price})`,
-    }));
-    setAllPackages(options || []);
-    
-    // Update selected packages with correct labels
-    if (packages.length > 0) {
-      const selectedPackages = packages.map(packageId => {
-        const matchedPackage = options.find(opt => opt.value === packageId);
-        return matchedPackage || { value: packageId, label: "Package not found" };
+    try {
+      const response = await axiosInstance.get(`/admin/mystery/${id}`);
+      const mystery = response.data.data;
+      
+      setInitialValues({
+        name: mystery.name,
+        package_ids: []
       });
       
-      formik.setFieldValue('package_ids', selectedPackages);
+      formik.setFieldValue("name", mystery.name);
+      
+      // Store raw package IDs (these might include duplicates)
+      setRawPackageIds(mystery.package_ids || []);
+      
+    } catch (error) {
+      toast.error("Failed to load mystery details", toastDefault);
+      history.push("/mystery");
     }
-  } catch (error) {
-    toast.error("Failed to load packages", toastDefault);
-  }
-};
+  };
 
-  // Update useEffect to handle dependencies properly
-useEffect(() => {
-  loadMysteryDetails();
-}, [id]); // Only depend on id
+  const loadAllPackages = async () => {
+    try {
+      const response = await axiosInstance.get("/admin/voucher-packages");
+      const options = response.data?.data?.map((pkg) => ({
+        value: pkg.id,
+        label: `${pkg.name} (${pkg.price})`,
+        actualValue: pkg.id,
+      }));
+      setAllPackages(options || []);
+    } catch (error) {
+      toast.error("Failed to load packages", toastDefault);
+    }
+  };
 
-useEffect(() => {
-  if (packages.length > 0) {
-    loadAllPackages();
-  }
-}, [packages]);
+  const loadSelectedPackages = () => {
+    // Create selected packages array allowing duplicates
+    const selectedPackages = rawPackageIds.map((packageId, index) => {
+      const matchedPackage = allPackages.find(opt => opt.value === packageId);
+      if (matchedPackage) {
+        return {
+          ...matchedPackage,
+          value: `${matchedPackage.value}-${Date.now()}-${index}-${Math.random()}`,
+          actualValue: matchedPackage.value,
+        };
+      }
+      return {
+        value: `${packageId}-${Date.now()}-${index}-${Math.random()}`,
+        label: "Package not found",
+        actualValue: packageId,
+      };
+    });
+    
+    formik.setFieldValue('package_ids', selectedPackages);
+  };
 
   const formik = useFormik({
     initialValues,
@@ -97,7 +107,8 @@ useEffect(() => {
         setIsLoading(true);
         await axiosInstance.put(`/admin/mystery/update/${id}`, {
           name: values.name,
-          package_ids: values.package_ids.map((pkg) => pkg.value),
+          // Extract actual package IDs, preserving duplicates
+          package_ids: values.package_ids.map((pkg) => pkg.actualValue),
         });
         toast.success("Mystery updated successfully", toastDefault);
         history.push("/mystery");
@@ -111,6 +122,65 @@ useEffect(() => {
       }
     },
   });
+
+  // Custom function to handle selection changes
+  const handlePackageChange = (selectedOptions) => {
+    const updatedOptions = selectedOptions ? selectedOptions.map((option, index) => ({
+      ...option,
+      // Ensure each selection has a unique identifier
+      value: option.actualValue ? 
+        `${option.actualValue}-${Date.now()}-${index}-${Math.random()}` : 
+        `${option.value}-${Date.now()}-${index}-${Math.random()}`,
+      actualValue: option.actualValue || option.value,
+    })) : [];
+    
+    formik.setFieldValue("package_ids", updatedOptions);
+  };
+
+  // Get options with unique values to allow multiple selections
+  const getOptionsWithUniqueValues = () => {
+    return allPackages.map((option) => ({
+      ...option,
+      value: `${option.value}-${Date.now()}-${Math.random()}`,
+      actualValue: option.value,
+    }));
+  };
+
+  // Custom component to display selected values with count
+  const formatSelectedValues = () => {
+    if (!formik.values.package_ids || formik.values.package_ids.length === 0) {
+      return null;
+    }
+
+    // Group by actualValue to show counts
+    const grouped = formik.values.package_ids.reduce((acc, pkg) => {
+      const key = pkg.actualValue;
+      if (!acc[key]) {
+        acc[key] = {
+          label: pkg.label,
+          count: 0,
+        };
+      }
+      acc[key].count++;
+      return acc;
+    }, {});
+
+    return (
+      <div className="mt-2 p-2 bg-gray-50 rounded">
+        <small className="text-gray-600 font-medium">Selected Packages:</small>
+        <div className="flex flex-wrap gap-2 mt-1">
+          {Object.entries(grouped).map(([id, info]) => (
+            <span
+              key={id}
+              className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+            >
+              {info.label} {info.count > 1 && `(x${info.count})`}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -135,21 +205,35 @@ useEffect(() => {
 
         <div className="mb-4">
           <label htmlFor="package_ids" className="block mb-2">
-            Packages
+            Packages (You can select the same package multiple times)
           </label>
           <Select
             id="package_ids"
             isMulti
-            options={allPackages}
+            options={getOptionsWithUniqueValues()}
             value={formik.values.package_ids}
-            onChange={(value) => formik.setFieldValue("package_ids", value)}
+            onChange={handlePackageChange}
             onBlur={() => formik.setFieldTouched("package_ids", true)}
             className={
               formik.touched.package_ids && formik.errors.package_ids
                 ? "border-red-500"
                 : ""
             }
+            closeMenuOnSelect={false}
+            isClearable
+            placeholder="Search and select packages..."
+            // Custom option rendering to show it's selectable multiple times
+            formatOptionLabel={(option) => (
+              <div>
+                {option.label}
+                <small className="text-gray-500 ml-2">(can select multiple)</small>
+              </div>
+            )}
           />
+          
+          {/* Display selected packages with counts */}
+          {formatSelectedValues()}
+          
           {formik.touched.package_ids && formik.errors.package_ids && (
             <div className="text-red-500 text-sm mt-1">
               {formik.errors.package_ids}

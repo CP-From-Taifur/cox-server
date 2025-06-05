@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
@@ -37,7 +38,7 @@ function Orders() {
       await toast.promise(
         axiosInstance.post("/admin/mystery-action", {
           order_id: orderId,
-          mystery_id: mysteryId
+          mystery_id: mysteryId,
         }),
         {
           pending: "Applying mystery package...",
@@ -87,35 +88,77 @@ function Orders() {
     }
   };
 
-  const handleUnusedVoucherLoad = async (order_id, voucher) => {
-    const voucherData = voucher?.data?.trim();
-    const package_id = voucher?.package_id;
-
+  const handleUnusedVoucherLoad = async (order_id, vouchers) => {
     try {
-      await toast.promise(
-        axiosInstance.post("/admin/packages/unused-voucher-load", {
-          order_id: order_id,
-          package_id: package_id,
-          data: voucherData,
-        }),
-        {
-          pending: "loaded voucher...",
-          success: {
-            render() {
-              reloadRefFunc.current(); // Reload the table
-              return "voucher loaded successfully";
+      const endpoint = process.env.REACT_APP_IMAGE_ROOT;
+      console.log(vouchers);
+      const isMultiple = Array.isArray(vouchers);
+
+      if (isMultiple) {
+        // Get the first voucher's package_id for product lookup
+        const package_id = vouchers[0].package_id;
+        const productDetails = await axios.get(
+          `${endpoint}/api/v1/single-package/${package_id}`
+        );
+
+        const product_id = productDetails.data?.data?.product_id;
+        if (!product_id) {
+          toast.error("Product ID not found for the vouchers", toastDefault);
+          return;
+        }
+        // Use addUpvoucher endpoint for multiple vouchers
+        await toast.promise(
+          axiosInstance.post("/admin/packages/add-upvoucher", {
+            product_id: product_id,
+            data: vouchers.map((v) => v.data.trim()),
+          }),
+          {
+            pending: "Processing vouchers...",
+            success: {
+              render() {
+                // Update order status after vouchers are added
+                axiosInstance.post(
+                  `/admin/order/update-voucher-status/${order_id}`
+                );
+                reloadRefFunc.current();
+                return `${vouchers.length} vouchers processed successfully`;
+              },
+            },
+            error: {
+              render(err) {
+                return getErrors(err.data, false, true);
+              },
             },
           },
-          error: {
-            render(err) {
-              return getErrors(err.data, false, true);
+          toastDefault
+        );
+      } else {
+        // Handle single voucher with existing endpoint
+        await toast.promise(
+          axiosInstance.post("/admin/packages/unused-voucher-load", {
+            order_id,
+            package_id: vouchers?.package_id,
+            data: vouchers?.data?.trim(),
+          }),
+          {
+            pending: "Loading voucher...",
+            success: {
+              render() {
+                reloadRefFunc.current();
+                return "Voucher loaded successfully";
+              },
+            },
+            error: {
+              render(err) {
+                return getErrors(err.data, false, true);
+              },
             },
           },
-        },
-        toastDefault
-      );
+          toastDefault
+        );
+      }
     } catch (error) {
-      console.error("load voucher error:", error);
+      console.error("Load voucher error:", error);
     }
   };
 
@@ -148,29 +191,15 @@ function Orders() {
       };
     }
 
-    if (column.accessor === "Voucher.data") {
-      return {
-        ...column,
-        Cell: ({ value }) => (
-          <span
-            className="cursor-pointer hover:text-blue-600"
-            onClick={() => handleCopy(value, true)}
-          >
-            {value || "---"}
-          </span>
-        ),
-      };
-    }
-
     return column;
   });
 
   const selectData = (res) => {
     // Add onMysterySelect to each order
     console.log(res.data.data.orders);
-    const ordersWithHandler = res.data.data.orders.map(order => ({
+    const ordersWithHandler = res.data.data.orders.map((order) => ({
       ...order,
-      onMysterySelect: handleMysterySelect // Add the handler to each order
+      onMysterySelect: handleMysterySelect, // Add the handler to each order
     }));
 
     setTotalDataCount(res.data.data.order_count);
@@ -216,11 +245,13 @@ function Orders() {
       const is_auto_package = e.row.original.is_auto_package;
       const isVoucher = e.row.original.isVoucher;
       const voucher = e.row.original.Voucher || null;
+      const childVouchers = e.row.original.childVouchers || [];
       // Show nothing for other cases
       if (
         !(
           status === "pending" ||
           status === "in_progress" ||
+          status === "cancel" ||
           ((status === "in_progress" || status === "cancel") &&
             is_auto_package === "1")
         )
@@ -256,14 +287,20 @@ function Orders() {
           )}
 
           {/* Voucher button for in_progress/cancel with auto_package */}
-          {(status === "in_progress" || status === "cancel") &&
-            is_auto_package === "1" &&
-            voucher && (
+          {(status === "in_progress" ||
+            status === "cancel" ||
+            status === "pending") &&
+            (voucher || childVouchers?.length > 0) && (
               <li>
                 <button
                   disabled={e.row.original.is_voucher_loaded === "1"}
                   className="cstm_btn_small bg-green-500 hover:bg-green-600"
-                  onClick={() => handleUnusedVoucherLoad(e.value, voucher)}
+                  onClick={() =>
+                    handleUnusedVoucherLoad(
+                      e.value,
+                      childVouchers?.length > 0 ? childVouchers : voucher
+                    )
+                  }
                 >
                   {e.row.original.is_voucher_loaded === "1" ? (
                     <i className="fas fa-check"></i>

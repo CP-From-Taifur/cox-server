@@ -35,8 +35,9 @@ export const ordersTableColumns = [
     id: "mystery",
     Cell: (e) => {
       const status = e.row.original.status;
+       const tag = e.row.original.tag;
       // Only show for non-completed orders
-      if (status !== "completed") {
+      if (status !== "completed" && tag === "MIS") {
         return (
           <MysterySelect
             orderId={e.row.original.id}
