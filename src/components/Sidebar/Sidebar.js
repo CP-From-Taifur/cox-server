@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from '../../assets/img/logo.png';
 import NotificationDropdown from "../../components/Dropdowns/NotificationDropdown";
@@ -80,6 +80,11 @@ export default function Sidebar({ isOpenSidebar }) {
         {
           text: "Category",
           path: "/category",
+          icon: "fas fa-tags",
+        },
+        {
+          text: "Mystery Box",
+          path: "/mystery",
           icon: "fas fa-tags",
         }
       ]
