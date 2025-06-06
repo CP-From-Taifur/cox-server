@@ -34,7 +34,7 @@ const MysterySelect = ({ orderId, onMysterySelect }) => {
         <option value="">Select Mystery Box</option>
         {mysteries.map(mystery => (
           <option key={mystery.id} value={mystery.id}>
-            {mystery.name}
+            {`${mystery.name} (${mystery.count})`}
           </option>
         ))}
       </select>

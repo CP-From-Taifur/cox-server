@@ -222,18 +222,25 @@ function Orders() {
       });
   };
 
-  const shouldShowRetryButton = (
-    status,
-    securityCode,
-    isAutoPackage,
-    isVoucher
-  ) => {
-    const isInProgress = status === "in_progress";
-    const isAutoPkg = isAutoPackage === "1";
-    const isPendingNonVoucher = isVoucher === "0" && status === "pending";
+const shouldShowRetryButton = (
+  status,
+  securityCode,
+  isAutoPackage,
+  isVoucher,
+  tag
+) => {
+  // First check if tag should be excluded
+  const excludedTags = ['6661', 'LITE', 'MIS'];
+  if (excludedTags.includes(tag)) {
+    return false;
+  }
 
-    return (isInProgress || isPendingNonVoucher) && isAutoPkg;
-  };
+  const isInProgress = status === "in_progress";
+  const isAutoPkg = isAutoPackage === "1";
+  const isPendingNonVoucher = isVoucher === "0" && status === "pending"
+
+  return (isInProgress || isPendingNonVoucher) && isAutoPkg;
+};
 
   let actionMenu = {
     id: "edit",
@@ -246,6 +253,7 @@ function Orders() {
       const isVoucher = e.row.original.isVoucher;
       const voucher = e.row.original.Voucher || null;
       const childVouchers = e.row.original.childVouchers || [];
+      const tag = e.row.original.tag || null;
       // Show nothing for other cases
       if (
         !(
@@ -274,7 +282,8 @@ function Orders() {
                 status,
                 securitycode,
                 is_auto_package,
-                isVoucher
+                isVoucher,
+                tag
               ) && (
                 <li
                   className="cstm_btn_small bg-yellow-500 hover:bg-yellow-600"
@@ -288,8 +297,7 @@ function Orders() {
 
           {/* Voucher button for in_progress/cancel with auto_package */}
           {(status === "in_progress" ||
-            status === "cancel" ||
-            status === "pending") &&
+            status === "cancel") &&
             (voucher || childVouchers?.length > 0) && (
               <li>
                 <button

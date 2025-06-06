@@ -37,7 +37,7 @@ export const ordersTableColumns = [
       const status = e.row.original.status;
        const tag = e.row.original.tag;
       // Only show for non-completed orders
-      if (status !== "completed" && tag === "MIS") {
+      if ((status === "pending" || status === "in_progress") && tag === "MIS") {
         return (
           <MysterySelect
             orderId={e.row.original.id}
@@ -115,6 +115,12 @@ export const ordersTableColumns = [
   {
     Header: "Server Url",
     accessor: "server_url",
+    Cell: (e) => {
+      const serverUrl = e.row.original.server_url;
+      const isAssignedBot = e.row.original.is_assign_bot;
+     return serverUrl && isAssignedBot ? e.row.original.server_url : "---";
+     
+    }
   },
 ];
 
