@@ -61,30 +61,30 @@ function Orders() {
     }
   };
 
-  const handleRetryOrder = async (orderId) => {
+ const handleRetryOrder = async (orderId) => {
     try {
       await toast.promise(
-        axiosInstance.post("/admin/retry-bot-request", {
-          order_id: orderId,
+        axiosInstance.post('/admin/retry-bot-request', {
+          order_id: orderId
         }),
         {
-          pending: "Retrying order...",
+          pending: 'Retrying order...',
           success: {
             render() {
               reloadRefFunc.current(); // Reload the table
-              return "Order retry initiated successfully";
-            },
+              return 'Order retry initiated successfully';
+            }
           },
           error: {
             render(err) {
               return getErrors(err.data, false, true);
-            },
-          },
+            }
+          }
         },
         toastDefault
       );
     } catch (error) {
-      console.error("Retry order error:", error);
+      console.error('Retry order error:', error);
     }
   };
 
