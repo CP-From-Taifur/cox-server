@@ -230,7 +230,7 @@ const shouldShowRetryButton = (
   tag
 ) => {
   // First check if tag should be excluded
-  const excludedTags = ['6661', 'LITE', 'MIS'];
+  const excludedTags = ['6661', 'LITE', '50', '100', '140', 'MIS'];
   if (excludedTags.includes(tag)) {
     return false;
   }
