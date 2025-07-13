@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useHistory, withRouter } from "react-router-dom";
+import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
 import axiosInstance from "../../common/axios";
 import useGet from "../../hooks/useGet";
@@ -8,7 +9,7 @@ import {
   getErrors,
   hasData,
   imgPath,
-  toastDefault
+  toastDefault,
 } from "../../utils/handler.utils";
 import Loader from "../Loader/Loader";
 
@@ -20,9 +21,11 @@ function AddPackage(props) {
   const { path, uploading } = useUpload(packageIcon);
 
   const [loading, setLoading] = useState(null);
+  const [selectedPackages, setSelectedPackages] = useState([]);
+
   const [uniqueState] = useState(false);
   const [products, loadingProducts] = useGet(`admin/topup-products`);
-  const [vouchers] = useGet(`admin/topup-packages/9`, "", uniqueState);
+  const [allPackages] = useGet(`admin/topup-packages`, "", uniqueState);
 
   const product_id = useRef(null);
   const name = useRef(null);
@@ -34,11 +37,12 @@ function AddPackage(props) {
   const in_stock = useRef(null);
   const is_auto = useRef(null);
   const sortOrder = useRef(null);
-  const voucher_id = useRef(null);
   const type = useRef(null);
   const bot_url = useRef(null);
   const code = useRef(null);
-  const quantity = useRef(null);
+  const packageIdsRef = useRef([]);
+
+
 
   const handleRemoveImage = () => {
     setPackageIcon(null);
@@ -47,9 +51,42 @@ function AddPackage(props) {
     }
   };
 
+  const loadPackageOptions = (inputValue) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Filter packages based on input
+        const filtered = allPackages.filter(pkg =>
+          pkg.name.toLowerCase().includes(inputValue.toLowerCase())
+        );
+        
+        // Return with unique values to allow multiple selection of same package
+        const options = filtered.map(option => ({
+          ...option,
+          value: `${option.value}-${Date.now()}-${Math.random()}`,
+          actualValue: option.value,
+        }));
+        
+        resolve(options);
+      }, 100); // Small delay to simulate async behavior
+    });
+  };
+  
+
+   const handlePackageChange = (selectedOptions) => {
+    // Update the ref with selected values
+    packageIdsRef.current = selectedOptions || [];
+    // Update state for re-rendering
+    setSelectedPackages(selectedOptions || []);
+  };
+
+
   const addPackageHandler = (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const selectedPackageIds = packageIdsRef.current.map(pkg => pkg?.id);
+
+
     axiosInstance
       .post(`/admin/topup-package/add`, {
         product_id: product_id.current.value,
@@ -62,11 +99,10 @@ function AddPackage(props) {
         type: type.current.value,
         sort_order: sortOrder.current.value,
         is_auto: is_auto.current.checked ? 1 : 0,
-        voucher_id: voucher_id.current.value,
+        package_ids: selectedPackageIds,
         in_stock: in_stock.current.checked ? 1 : 0,
         botUrl: bot_url.current.value,
         code: code.current.value,
-        quantity: quantity.current.value,
       })
       .then((res) => {
         toast.success("Topup package created successfully", toastDefault);
@@ -80,6 +116,8 @@ function AddPackage(props) {
         setLoading(false);
       });
   };
+
+  
 
   return (
     <section className="relative container_admin">
@@ -128,23 +166,23 @@ function AddPackage(props) {
                       onChange={(e) => setPackageIcon(e.target.files[0])}
                     />
 
-<div className="mt-2">
-  {packageIcon && (
-    <div className="relative">
-      <img
-        src={imgPath(path)}
-        alt="package icon"
-        className="rounded-md w-24 h-20 object-contain" 
-      />
-      <button
-        onClick={handleRemoveImage}
-        className="absolute p-2 top-0 left-0 w-5 h-5 flex items-center justify-center bg-red-500 rounded-full text-white font-medium"
-      >
-        ×
-      </button>
-    </div>
-  )}
-</div>
+                    <div className="mt-2">
+                      {packageIcon && (
+                        <div className="relative">
+                          <img
+                            src={imgPath(path)}
+                            alt="package icon"
+                            className="rounded-md w-24 h-20 object-contain"
+                          />
+                          <button
+                            onClick={handleRemoveImage}
+                            className="absolute p-2 top-0 left-0 w-5 h-5 flex items-center justify-center bg-red-500 rounded-full text-white font-medium"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="form_grid">
                     <div>
@@ -197,14 +235,54 @@ function AddPackage(props) {
                       />
                     </div>
                   </div>
-                  <div className="form_grid">
                     <div>
-                      <label htmlFor="name">Voucher</label>
-                      <select ref={voucher_id} className="form_input">
-                        {vouchers?.map((voucher) => (
-                          <option value={voucher.id}>{voucher.name}</option>
-                        ))}
-                      </select>
+                      <label className="block text-gray-700 text-sm font-bold mb-2">
+              Select Packages (You can select the same package multiple times)
+            </label>
+            <AsyncSelect
+              isMulti
+              cacheOptions
+              defaultOptions={allPackages && allPackages.map((option) => ({
+                ...option,
+                value: `${option.value}-${Date.now()}-${Math.random()}`,
+                actualValue: option.value,
+              }))}
+              loadOptions={loadPackageOptions}
+              value={selectedPackages}
+              onChange={handlePackageChange}
+              className="basic-multi-select"
+              classNamePrefix="select"
+              closeMenuOnSelect={false}
+              isClearable
+              placeholder="Search and select packages..."
+              
+              filterOption={() => true}
+              isOptionDisabled={() => false}
+             
+              formatOptionLabel={(option) => (
+                <div>
+                  {option.name}
+                  <small className="text-gray-500 ml-2">(can select multiple)</small>
+                </div>
+              )}
+            />
+
+            {/* Display selected packages */}
+        {selectedPackages.length > 0 && (
+          <div className="mt-2 p-2 bg-gray-50 rounded">
+            <small className="text-gray-600 font-medium">Selected Packages:</small>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {selectedPackages.map((pkg, index) => (
+                <span
+                  key={pkg.value}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                >
+                  {pkg.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
                     </div>
 
                     <div>
@@ -217,9 +295,8 @@ function AddPackage(props) {
                         placeholder="tag"
                       />
                     </div>
-                  </div>
-                      <div className="form_grid">  
-                   <div>
+                  <div className="form_grid">
+                    <div>
                       <label htmlFor="buy_price">Code</label>
                       <input
                         ref={code}
@@ -229,10 +306,7 @@ function AddPackage(props) {
                         placeholder="Code"
                       />
                     </div>
-                   <div>
-
-                    
-
+                    <div>
                       <label htmlFor="buy_price">Bot URL</label>
                       <input
                         ref={bot_url}
@@ -242,18 +316,7 @@ function AddPackage(props) {
                         placeholder="Bot URL"
                       />
                     </div>
-                    </div>
-
-                          <div>
-                      <label htmlFor="buy_price">Quantity</label>
-                      <input
-                        ref={quantity}
-                        id="quantity"
-                        className="form_input"
-                        type="number"
-                        placeholder="quantity"
-                      />
-                    </div>
+                  </div>
 
                   <div className="my-2">
                     <div class="relative">
