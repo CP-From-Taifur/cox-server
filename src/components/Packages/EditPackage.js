@@ -339,6 +339,17 @@ useEffect(() => {
                   className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
                 >
                   {pkg.name}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPackages = selectedPackages.filter((_, i) => i !== index);
+                      setSelectedPackages(newPackages);
+                      packageIdsRef.current = newPackages;
+                    }}
+                    className="ml-2 text-blue-600 hover:text-blue-800 font-bold"
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
             </div>
