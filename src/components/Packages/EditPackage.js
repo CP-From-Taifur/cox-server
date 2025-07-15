@@ -37,6 +37,7 @@ function EditPackage(props) {
     uniqueState
   );
  const [allPackages, loadPackages] = useGet(`admin/topup-packages`, "", uniqueState);
+ console.log(allPackages)
 
   const product_id = useRef(null);
   const name = useRef(null);
