@@ -1,6 +1,6 @@
 import { convertToHTML } from "draft-convert";
 import { EditorState } from "draft-js";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Editor } from "react-draft-wysiwyg";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { useHistory } from "react-router-dom";
@@ -23,6 +23,7 @@ function AddTopupProduct() {
   const redeemLink = useRef(null);
   const videoLink = useRef(null);
   const video_label = useRef(null);
+  const order_limit = useRef(null);
 
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [productLogo, setProductLogo] = useState(null);
@@ -50,6 +51,8 @@ function AddTopupProduct() {
           redeem_link: redeemLink.current.value,
           video_link: videoLink.current.value,
           video_label: video_label.current.value,
+          order_limit: order_limit.current.value,
+
           rules: convertToHTML(editorState.getCurrentContent()),
         })
         .then((res) => {
@@ -196,6 +199,17 @@ function AddTopupProduct() {
                   }}
                   onEditorStateChange={(e) => setEditorState(e)}
                 />
+                  <div>
+                    <label htmlFor="limit">Limit</label>
+                    <input
+                      ref={order_limit}
+                      id="limit"
+                      className="form_input"
+                      type="number"
+                      placeholder="Order Limits"
+                      required
+                    />
+                  </div>
 
                 <div className="my-2">
                   <div class="relative">

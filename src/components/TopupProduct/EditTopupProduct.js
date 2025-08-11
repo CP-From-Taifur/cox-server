@@ -1,6 +1,6 @@
 import { convertFromHTML, convertToHTML } from "draft-convert";
 import { EditorState } from "draft-js";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Editor } from "react-draft-wysiwyg";
 import { useHistory, withRouter } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -38,6 +38,7 @@ function EditTopupProduct(props) {
   const videoLink = useRef(null);
   const video_label = useRef(null);
   const brand = useRef(null);
+  const order_limit = useRef(null);
 
   const editProductHandler = (e) => {
     e.preventDefault();
@@ -56,6 +57,7 @@ function EditTopupProduct(props) {
         video_link: videoLink.current.value,
         video_label: video_label.current.value,
         is_active: is_active_product.current.checked ? 1 : 0,
+        order_limit: order_limit.current.value,
       })
       .then((res) => {
         toast.success("Product updated successfully", toastDefault);
@@ -217,6 +219,19 @@ function EditTopupProduct(props) {
                     }}
                     onEditorStateChange={(e) => setEditorState(e)}
                   />
+
+                   <div>
+                    <label htmlFor="limit">Limit</label>
+                    <input
+                      ref={order_limit}
+                      id="limit"
+                      className="form_input"
+                      type="number"
+                       defaultValue={data?.order_limit}
+                      placeholder="Order Limits"
+                      required
+                    />
+                  </div>
 
                   <div className="my-2">
                     <div class="relative">
