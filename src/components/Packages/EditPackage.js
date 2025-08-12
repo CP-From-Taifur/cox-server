@@ -31,6 +31,8 @@ function EditPackage(props) {
     uniqueState
   );
 
+  console.log(data)
+
   const [products, loadingProducts] = useGet(
     `admin/topup-products`,
     "",
@@ -54,6 +56,7 @@ function EditPackage(props) {
   const type = useRef(null);
   const bot_url = useRef(null);
   const code = useRef(null);
+  const limits = useRef(null)
 
   const handleRemoveImage = () => {
     setImageState({
@@ -150,6 +153,7 @@ useEffect(() => {
       in_stock: in_stock.current.checked ? 1 : 0,
       botUrl: bot_url.current.value,
       code: code.current.value,
+      limits: limits.current.value,
     };
     axiosInstance
       .post(`/admin/topup-package/update/${packageId}`, formData)
@@ -393,6 +397,19 @@ useEffect(() => {
                       />
                     </div>
                   </div>
+
+                  <div>
+                      <label htmlFor="limits">Limits</label>
+                      <input
+                        ref={limits}
+                        id="limits"
+                        className="form_input"
+                        type="text"
+                        defaultValue={data?.limits}
+                        placeholder="Limits"
+                        required
+                      />
+                    </div>
 
                   <div className="my-2">
                     <div class="relative">

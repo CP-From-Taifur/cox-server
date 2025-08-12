@@ -41,6 +41,7 @@ function AddPackage(props) {
   const bot_url = useRef(null);
   const code = useRef(null);
   const packageIdsRef = useRef([]);
+  const limits = useRef(null)
 
 
 
@@ -103,6 +104,7 @@ function AddPackage(props) {
         in_stock: in_stock.current.checked ? 1 : 0,
         botUrl: bot_url.current.value,
         code: code.current.value,
+        limits: limits.current.value
       })
       .then((res) => {
         toast.success("Topup package created successfully", toastDefault);
@@ -317,6 +319,18 @@ function AddPackage(props) {
                       />
                     </div>
                   </div>
+
+                  <div>
+                      <label htmlFor="limits">Limits</label>
+                      <input
+                        ref={limits}
+                        id="limits"
+                        className="form_input"
+                        type="text"
+                        placeholder="Limits"
+                        required
+                      />
+                    </div>
 
                   <div className="my-2">
                     <div class="relative">
