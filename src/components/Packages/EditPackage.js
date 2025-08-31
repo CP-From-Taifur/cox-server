@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useHistory, withRouter } from "react-router-dom";
+import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
 import axiosInstance from "../../common/axios";
 import useGet from "../../hooks/useGet";
 import useUpload from "../../hooks/useUpload";
-import { getErrors, hasData, imgPath, toastDefault } from "../../utils/handler.utils";
+import {
+  getErrors,
+  hasData,
+  imgPath,
+  toastDefault,
+} from "../../utils/handler.utils";
 import Loader from "../Loader/Loader";
 function EditPackage(props) {
   const history = useHistory();
@@ -14,27 +20,26 @@ function EditPackage(props) {
   const [imageState, setImageState] = useState({
     currentImage: null,
     previewUrl: null,
-    isRemoved: false
+    isRemoved: false,
   });
   const [packageIcon, setPackageIcon] = useState(null);
   const { path, uploading } = useUpload(packageIcon);
+  const [selectedPackages, setSelectedPackages] = useState([]);
   const [data, loadingData] = useGet(
     `admin/topup-package/${packageId}`,
     "",
     uniqueState
   );
 
+  console.log(data)
 
   const [products, loadingProducts] = useGet(
     `admin/topup-products`,
     "",
     uniqueState
   );
-  const [vouchers, loadingVoucher] = useGet(
-    `admin/topup-packages/9`,
-    "",
-    uniqueState
-  );
+ const [allPackages, loadPackages] = useGet(`admin/topup-packages`, "", uniqueState);
+ console.log(allPackages)
 
   const product_id = useRef(null);
   const name = useRef(null);
@@ -46,56 +51,97 @@ function EditPackage(props) {
   const is_auto = useRef(null);
   const in_stock = useRef(null);
   const sortOrder = useRef(null);
-  const voucher_ids = useRef(null);
+  const packageIdsRef = useRef([]);
+  
   const type = useRef(null);
   const bot_url = useRef(null);
   const code = useRef(null);
-    const quantity = useRef(null);
+  const limits = useRef(null)
 
   const handleRemoveImage = () => {
-   
     setImageState({
       currentImage: null,
       previewUrl: null,
-      isRemoved: true
+      isRemoved: true,
     });
   };
 
-const handleImageChange = (e) => {
-  const file = e.target.files[0];
-  setPackageIcon(file);
-  setImageState({
-    
-    isRemoved: false
-  });
-};
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setPackageIcon(file);
+    setImageState({
+      isRemoved: false,
+    });
+  };
 
   useEffect(() => {
     if (data?.icon && !imageState.isRemoved) {
       setImageState({
         currentImage: null,
         previewUrl: data?.icon,
-        isRemoved: false
+        isRemoved: false,
       });
     }
-    if(path && !imageState.isRemoved){
+    if (path && !imageState.isRemoved) {
       setImageState({
         currentImage: null,
         previewUrl: path,
-        isRemoved: false
+        isRemoved: false,
       });
     }
   }, [data?.icon, imageState.isRemoved, path]);
 
+useEffect(() => {
+  // Only run when allPackages and data are loaded
+  if (allPackages && data?.package_ids) {
+    // Find the packages that match the IDs
+    const defaultSelected = data.package_ids
+      .map(id => allPackages.find(pkg => pkg.id === id))
+      .filter(Boolean);
+    setSelectedPackages(defaultSelected);
+    packageIdsRef.current = defaultSelected;
+  }
+}, [allPackages, data?.package_ids]);
+
+  
+  const loadPackageOptions = (inputValue) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Filter packages based on input
+        const filtered = allPackages.filter(pkg =>
+          pkg.name.toLowerCase().includes(inputValue.toLowerCase())
+        );
+        
+        // Return with unique values to allow multiple selection of same package
+        const options = filtered.map(option => ({
+          ...option,
+          value: `${option.value}-${Date.now()}-${Math.random()}`,
+          actualValue: option.value,
+        }));
+        
+        resolve(options);
+      }, 100); // Small delay to simulate async behavior
+    });
+  };
+  
+
+   const handlePackageChange = (selectedOptions) => {
+    // Update the ref with selected values
+    packageIdsRef.current = selectedOptions || [];
+    // Update state for re-rendering
+    setSelectedPackages(selectedOptions || []);
+  };
 
   const editPackageHandler = (e) => {
     e.preventDefault();
     setLoading(true);
 
+     const selectedPackageIds = packageIdsRef.current.map(pkg => pkg?.id);
+
     const formData = {
       product_id: product_id.current.value,
       name: name.current.value,
-      icon: imageState.isRemoved ? "" : (imageState.previewUrl),
+      icon: imageState.isRemoved ? "" : imageState.previewUrl,
       price: sell_price.current.value,
       buy_price: buy_price.current.value,
       admin_com: admin_com.current.value,
@@ -103,11 +149,11 @@ const handleImageChange = (e) => {
       type: type.current.value,
       sort_order: sortOrder.current.value,
       is_auto: is_auto.current.checked ? 1 : 0,
-      voucher_id: voucher_ids.current.value,
+      package_ids: selectedPackageIds,
       in_stock: in_stock.current.checked ? 1 : 0,
       botUrl: bot_url.current.value,
       code: code.current.value,
-      quantity: quantity.current.value
+      limits: limits.current.value,
     };
     axiosInstance
       .post(`/admin/topup-package/update/${packageId}`, formData)
@@ -134,12 +180,12 @@ const handleImageChange = (e) => {
         </div>
         <div className="py-10 px-4">
           <div className="w-full md:w-[70%] min-h-[250px] mx-auto py-6 relative border border-gray-200 px-4">
-            {loadingData || loading || loadingProducts || loadingVoucher ? (
+            {loadingData || loading || loadingProducts || loadPackages ? (
               <Loader absolute />
             ) : (
               ""
             )}
-            {hasData(data) && hasData(products) && hasData(vouchers) && (
+            {hasData(data) && hasData(products) && hasData(allPackages) && (
               <form onSubmit={editPackageHandler}>
                 <div>
                   <div className="form_grid">
@@ -180,24 +226,24 @@ const handleImageChange = (e) => {
                       onChange={handleImageChange}
                     />
 
-<div className="mt-2">
-  {!imageState.isRemoved && (imageState.previewUrl) && (
-    <div className="relative inline-block">
-      <img
-        src={imgPath(imageState.previewUrl)}
-        alt="package icon"
-        className="rounded-md w-24 h-20 object-contain"
-      />
-      <button
-        type="button"
-        onClick={handleRemoveImage}
-        className="absolute p-2 top-0 left-0 w-5 h-5 flex items-center justify-center bg-red-500 rounded-full text-white font-medium"
-      >
-        ×
-      </button>
-    </div>
-  )}
-</div>
+                    <div className="mt-2">
+                      {!imageState.isRemoved && imageState.previewUrl && (
+                        <div className="relative inline-block">
+                          <img
+                            src={imgPath(imageState.previewUrl)}
+                            alt="package icon"
+                            className="rounded-md w-24 h-20 object-contain"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="absolute p-2 top-0 left-0 w-5 h-5 flex items-center justify-center bg-red-500 rounded-full text-white font-medium"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="form_grid">
                     <div>
@@ -255,21 +301,65 @@ const handleImageChange = (e) => {
                     </div>
                   </div>
 
-                  <div className="form_grid">
-                    <div>
-                      <label htmlFor="names">Vouchers</label>
-                      <select
-                        defaultValue={data.voucher_id}
-                        ref={voucher_ids}
-                        className="form_input"
-                      >
-                        <option value={0}>select</option>
-                        {vouchers?.map((bbbbbb) => (
-                          <option key={bbbbbb.id} value={bbbbbb.id}>
-                            {bbbbbb.name}
-                          </option>
-                        ))}
-                      </select>
+                       <div>
+                      <label className="block text-gray-700 text-sm font-bold mb-2">
+              Select Packages (You can select the same package multiple times)
+            </label>
+            <AsyncSelect
+              isMulti
+              cacheOptions
+              defaultOptions={allPackages && allPackages.map((option) => ({
+                ...option,
+                value: `${option.value}-${Date.now()}-${Math.random()}`,
+                actualValue: option.value,
+              }))}
+              loadOptions={loadPackageOptions}
+              value={selectedPackages}
+              onChange={handlePackageChange}
+              className="basic-multi-select"
+              classNamePrefix="select"
+              closeMenuOnSelect={false}
+              isClearable
+              placeholder="Search and select packages..."
+              
+              filterOption={() => true}
+              isOptionDisabled={() => false}
+             
+              formatOptionLabel={(option) => (
+                <div>
+                  {option.name}
+                  <small className="text-gray-500 ml-2">(can select multiple)</small>
+                </div>
+              )}
+            />
+
+            {/* Display selected packages */}
+        {selectedPackages.length > 0 && (
+          <div className="mt-2 p-2 bg-gray-50 rounded">
+            <small className="text-gray-600 font-medium">Selected Packages:</small>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {selectedPackages.map((pkg, index) => (
+                <span
+                  key={pkg.value}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                >
+                  {pkg.name}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPackages = selectedPackages.filter((_, i) => i !== index);
+                      setSelectedPackages(newPackages);
+                      packageIdsRef.current = newPackages;
+                    }}
+                    className="ml-2 text-blue-600 hover:text-blue-800 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
                     </div>
                     <div>
                       <label htmlFor="sort_order">Tag</label>
@@ -282,10 +372,9 @@ const handleImageChange = (e) => {
                         placeholder="Tag"
                       />
                     </div>
-                  </div>
 
                   <div className="form_grid">
-                     <div>
+                    <div>
                       <label htmlFor="sort_order">Code</label>
                       <input
                         ref={code}
@@ -296,7 +385,7 @@ const handleImageChange = (e) => {
                         placeholder="Code"
                       />
                     </div>
-                     <div>
+                    <div>
                       <label htmlFor="sort_order">Bot URL</label>
                       <input
                         ref={bot_url}
@@ -309,18 +398,19 @@ const handleImageChange = (e) => {
                     </div>
                   </div>
 
-                              <div>
-                      <label htmlFor="buy_price">Quantity</label>
+                  <div>
+                      <label htmlFor="limits">Limits</label>
                       <input
-                        ref={quantity}
-                        id="quantity"
-                        defaultValue={data?.quantity}
+                        ref={limits}
+                        id="limits"
                         className="form_input"
-                        type="number"
-                        placeholder="quantity"
+                        type="text"
+                        defaultValue={data?.limits}
+                        placeholder="Limits"
+                        required
                       />
                     </div>
-                    
+
                   <div className="my-2">
                     <div class="relative">
                       <select
@@ -329,7 +419,7 @@ const handleImageChange = (e) => {
                         defaultValue={data?.type}
                         class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                       >
-                        <option >Select Type</option>
+                        <option>Select Type</option>
                         <option value="25D">25D</option>
                         <option value="50D">50D</option>
                         <option value="115D">115D</option>

@@ -423,6 +423,10 @@ export const userTableColumns = [
     accessor: "username",
   },
   {
+    Header: "Full Name",
+    accessor: "full_name",
+  },
+  {
     Header: "Account status",
     accessor: "account_status",
   },

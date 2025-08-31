@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react'
-import ReactTable from '../ReactTables/ReactTable';
-import Pagination from '../ReactTables/Pagination';
-import ListPerPage from '../ReactTables/ListPerPage';
-import { userTableColumns } from '../../utils/reactTableColumns';
-import { getErrors, hasData, toastDefault } from '../../utils/handler.utils';
-import useGet from '../../hooks/useGet';
-import UiHandler from '../UiHandler';
-import SearchUser from './SearchUser';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axiosInstance from '../../common/axios';
-import { Link } from 'react-router-dom';
+import useGet from '../../hooks/useGet';
+import { getErrors, hasData, toastDefault } from '../../utils/handler.utils';
+import { userTableColumns } from '../../utils/reactTableColumns';
+import ListPerPage from '../ReactTables/ListPerPage';
+import Pagination from '../ReactTables/Pagination';
+import ReactTable from '../ReactTables/ReactTable';
+import UiHandler from '../UiHandler';
+import SearchUser from './SearchUser';
 
 function Users() {
     const [currentPage, setCurrentPage] = useState(1)
@@ -18,7 +18,7 @@ function Users() {
     const [urlToFetch, setUrlToFetch] = useState(`admin/users?page=${currentPage}&limit=${listPerPage}`)
     const [uniqueState, setUniqueState] = useState(false)
     const [userData, loading, error] = useGet(urlToFetch, '', uniqueState)
-
+console.log(userData)
 
     useEffect(() => {
         setUrlToFetch(`admin/users?page=${currentPage}&limit=${listPerPage}&${searchQuery}`)
