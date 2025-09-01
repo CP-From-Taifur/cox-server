@@ -39,6 +39,7 @@ function EditTopupProduct(props) {
   const video_label = useRef(null);
   const brand = useRef(null);
   const order_limit = useRef(null);
+  const check_id = useRef(null);
 
   const editProductHandler = (e) => {
     e.preventDefault();
@@ -58,6 +59,7 @@ function EditTopupProduct(props) {
         video_label: video_label.current.value,
         is_active: is_active_product.current.checked ? 1 : 0,
         order_limit: order_limit.current.value,
+        check_id: check_id.current.checked ? 1 : 0,
       })
       .then((res) => {
         toast.success("Product updated successfully", toastDefault);
@@ -72,7 +74,7 @@ function EditTopupProduct(props) {
       });
   };
 
-  console.log(data?.brand?.name)
+
 
   return (
     <section className="relative container_admin">
@@ -248,7 +250,7 @@ function EditTopupProduct(props) {
                     </div>
                   </div>
 
-                  <div className="my-2">
+                  <div className="my-2 flex items-center gap-6">
                     <label className="py-2 inline-block cursor-pointer select-none">
                       <input
                         type="checkbox"
@@ -257,6 +259,16 @@ function EditTopupProduct(props) {
                         className="mr-2"
                       />
                       Is active product
+                    </label>
+
+                    <label className="py-2 inline-block cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        defaultChecked={data?.check_id == 1}
+                        ref={check_id}
+                        className="mr-2"
+                      />
+                      Is check ID
                     </label>
                   </div>
 

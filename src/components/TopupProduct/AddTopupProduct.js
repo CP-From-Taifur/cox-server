@@ -24,6 +24,7 @@ function AddTopupProduct() {
   const videoLink = useRef(null);
   const video_label = useRef(null);
   const order_limit = useRef(null);
+  const check_id = useRef(null);
 
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const [productLogo, setProductLogo] = useState(null);
@@ -52,6 +53,7 @@ function AddTopupProduct() {
           video_link: videoLink.current.value,
           video_label: video_label.current.value,
           order_limit: order_limit.current.value,
+          check_id: check_id.current.value,
 
           rules: convertToHTML(editorState.getCurrentContent()),
         })
@@ -224,7 +226,7 @@ function AddTopupProduct() {
                     </select>
                   </div>
                 </div>
-                <div className="my-2">
+                <div className="my-2 flex gap-6 items-center">
                   <label className="py-2 inline-block cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -233,6 +235,16 @@ function AddTopupProduct() {
                       className="mr-2"
                     />
                     Is active product
+                  </label>
+
+                   <label className="py-2 inline-block cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      ref={check_id}
+                      className="mr-2"
+                    />
+                    Is check ID
                   </label>
                 </div>
 
